@@ -1,4 +1,3 @@
-export * from './floor'
 export * from './uniqueId'
 export * from './isFunction'
 export * from './validate'
