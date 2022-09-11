@@ -9,6 +9,7 @@ specifiers:
   '@vitejs/plugin-react': ^2.1.0
   autoprefixer: ^10.4.8
   axios: ^0.27.2
+  classnames: ^2.3.1
   daisyui: ^2.25.0
   eslint: ^8.0.1
   eslint-config-react-app: ^7.0.1
@@ -37,6 +38,7 @@ devDependencies:
   '@typescript-eslint/parser': 5.36.2_itqs5654cmlnjraw6gjzqacppi
   '@vitejs/plugin-react': 2.1.0_vite@3.1.0
   autoprefixer: 10.4.8_postcss@8.4.16
+  classnames: 2.3.1
   eslint: 8.23.0
   eslint-config-react-app: 7.0.1_itqs5654cmlnjraw6gjzqacppi
   eslint-config-standard: 17.0.0_ci7jzfiysajw25w4iodapaa2cq
@@ -2040,6 +2042,10 @@ packages:
       readdirp: 3.6.0
     optionalDependencies:
       fsevents: 2.3.2
+
+  /classnames/2.3.1:
+    resolution: {integrity: sha512-OlQdbZ7gLfGarSqxesMesDa5uz7KFbID8Kpq/SxIoNGDqY8lSYs0D+hhtBXhcdB3rcbXArFr7vlHheLk1voeNA==}
+    dev: true
 
   /color-convert/1.9.3:
     resolution: {integrity: sha512-QfAUtd+vFdAtFQcC8CCyYt1fYWxSqAiK2cSD6zDB8N3cpsEBAvRxp9zOGg6G/SHHJYAT88/az/IuDGALsNVbGg==}

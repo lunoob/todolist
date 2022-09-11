@@ -1,4 +1,6 @@
 import { FC, useMemo, memo } from 'react'
+import { stringFixed } from '@/utils'
+import { RateType } from '@/model/common'
 
 const taskConfig = {
   plan: {
@@ -11,56 +13,100 @@ const taskConfig = {
   }
 }
 
-type Props = {
-    type: keyof typeof taskConfig
+const titleTip = {
+  plan: '点击完成',
+  completed: '点击重做'
 }
 
-const datas = [
-  { id: 1, title: '去吃麻辣烫', rouble: 1, rmb: 0.08707, dollar: 0.01323 },
-  { id: 2, title: '去吃去吃海底捞', rouble: 1, rmb: 0.08707, dollar: 0.01323 }
-]
+/**
+ * 匹配货币符号
+ */
+function m (value: number | string, type: RateType) {
+  const symbols: Record<RateType, string> = {
+    RUB: '₽',
+    CNY: '¥',
+    USD: '$'
+  }
+
+  return symbols[type] + value
+}
+
+type Props = {
+    type: keyof typeof taskConfig
+    list: Task[]
+    onChecked?: (task: Task) => any
+}
 
 const TaskList: FC<Props> = (props) => {
-  const { type } = props
+  const { type, list, onChecked } = props
 
   const config = useMemo(() => taskConfig[type], [type])
 
   const total = useMemo(() => {
-    const initialValue = { rouble: 0, rmb: 0, dollar: 0 }
+    const initialValue = { RUB: '0', CNY: '0', USD: '0' }
 
-    return datas.reduce((prev, cur) => (
+    const fixed = (val: number) => stringFixed(val, 6)
+
+    return list.reduce((prev, cur) => (
       Object.assign(prev, {
-        rouble: prev.rouble + cur.rouble,
-        rmb: prev.rmb + cur.rmb,
-        dollar: prev.dollar + cur.dollar
+        RUB: fixed(parseFloat(prev.RUB) + parseFloat(cur.RUB)),
+        CNY: fixed(parseFloat(prev.CNY) + parseFloat(cur.CNY)),
+        USD: fixed(parseFloat(prev.USD) + parseFloat(cur.USD))
       })
     ), initialValue)
-  }, datas)
+  }, [list])
+
+  const proxyCheckboxChange = ({ target }: any) => {
+    if (!target) {
+      return
+    }
+    const id = target.dataset.id
+    if (id == null) {
+      return
+    }
+    const task = list.find(n => `${n.id}` === id)
+    task && onChecked && onChecked(task)
+  }
 
   const isCompleted = type === 'completed'
 
   return (
     <div>
       <span>{ config.title }</span>
-      <ul className="divide-y border rounded-lg my-2">
-        {datas.map(task => (
+      <ul className="divide-y border rounded-lg my-2" onChange={proxyCheckboxChange}>
+        {list.length
+          ? list.map(task => (
           <li className="flex py-3 text-center" key={task.id}>
             <div className="basis-3/6 flex pl-3">
-              <input type="checkbox" checked={isCompleted} className="checkbox checkbox-primary mr-3" />
-              <p className={`text-left ${isCompleted && 'line-through'}`}>{ task.title }</p>
+              <input
+                title={titleTip[type]}
+                type="checkbox"
+                defaultChecked={isCompleted}
+                className="checkbox checkbox-primary mr-3"
+                data-id={task.id}
+              />
+              <p className={`flex-1 w-0 truncate text-left ${isCompleted && 'line-through'}`}>
+                { task.title }
+              </p>
             </div>
-            <span className="basis-1/6">₽{task.rouble}</span>
-            <span className="basis-1/6">¥{task.rmb}</span>
-            <span className="basis-1/6">${task.dollar}</span>
+            <span className="basis-1/6 truncate" title={m(task.RUB, 'RUB')}>{m(task.RUB, 'RUB')}</span>
+            <span className="basis-1/6 truncate" title={m(task.CNY, 'CNY')}>{m(task.CNY, 'CNY')}</span>
+            <span className="basis-1/6 truncate" title={m(task.USD, 'USD')}>{m(task.USD, 'USD')}</span>
           </li>
-        ))}
+          ))
+          : <div className="text-center py-10 text-slate-400">暂无任务</div>
+        }
       </ul>
-      <div className="flex border border-transparent text-center">
-        <span className="basis-3/6 text-left">{ config.costLabel }</span>
-        <span className="basis-1/6">₽{total.rouble}</span>
-        <span className="basis-1/6">¥{total.rmb}</span>
-        <span className="basis-1/6">${total.dollar}</span>
-      </div>
+      {
+        !!list.length && (
+          <div className="flex border border-transparent text-center">
+            <span className="basis-3/6 text-left">{ config.costLabel }</span>
+            <span className="basis-1/6 truncate" title={m(total.RUB, 'RUB')}>{m(total.RUB, 'RUB')}</span>
+            <span className="basis-1/6 truncate" title={m(total.CNY, 'CNY')}>{m(total.CNY, 'CNY')}</span>
+            <span className="basis-1/6 truncate" title={m(total.USD, 'USD')}>{m(total.USD, 'USD')}</span>
+          </div>
+        )
+      }
     </div>
   )
 }
