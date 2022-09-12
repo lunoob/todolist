@@ -1,5 +1,5 @@
 type Task = {
   id: number | string
   title: string
-  [k: string]: any
+  [k: string]: string
 }

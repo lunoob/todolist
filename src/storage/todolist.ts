@@ -1,10 +1,10 @@
 /**
-* @fileoverview Storage for todolist.
+* @fileoverview Storage for todoList.
 * @author Luoob
 */
 
-const PLAIN_KEY = 'todolist_plan'
-const COMPUTED_KEY = 'todolist_computed'
+const PLAIN_KEY = 'todo_list_plan'
+const COMPUTED_KEY = 'todo_list_computed'
 
 /**
  * 获取计划中的任务

@@ -1,53 +1,51 @@
 import { FC, memo, useCallback, useEffect, useState } from 'react'
 import { validate, validators, RuleObject, stringFixed } from '@/utils'
-import { getPlanTasks, updatePlanTasks, getCompletedTasks, updateCompletedTasks } from '@/storage/todolist'
-import Common, { GetForexRatesParams, RateType } from '@/model/common'
+import { getPlanTasks, updatePlanTasks, getCompletedTasks, updateCompletedTasks } from '@/storage/todoList'
+import Common, { GetExchangeRatesParams, RateType } from '@/model/common'
 import TaskList from '@/components/task_list'
 import Message from '@/public_components/message'
 import cs from 'classnames'
 import './index.css'
 
-type RestRateType<K extends RateType> = Omit<Record<RateType, number>, K>
-type MatchForexRates = {
+type RestRateType<K extends RateType, V = number> = Omit<Record<RateType, V>, K>
+type MatchExchangeRates = {
   <T extends RateType>(currency: T): RestRateType<T>
 }
 
-const currencys = [
+const currencyList = [
   { label: '美元', value: 'USD' },
   { label: '卢布', value: 'RUB' },
   { label: '人民币', value: 'CNY' }
 ]
 
 // 计算外汇汇率
-function calcforexRates<T extends RateType> (base: T, rates: RestRateType<T>) {
-  const forexRatesMap = {
+function calcExchangeRates<T extends RateType> (base: T, rates: RestRateType<T>) {
+  const exchangeRatesMap = {
     [base]: rates
   }
 
-  const restRateTypes = Object.keys(rates)
+  const restRateTypes = Object.keys(rates) as (keyof typeof rates)[]
 
   restRateTypes.forEach((rate, idx) => {
-    const rateMapOtherRateObj = {
-      // @ts-ignore
+    const rateMapOtherRateObj: Record<string, string> = {
       [base]: stringFixed(1 / rates[rate], 6)
     }
     const otherRates = [...restRateTypes].splice(idx - 1, 1)
     otherRates.forEach(other => {
-      // @ts-ignore
       rateMapOtherRateObj[other] = stringFixed(rates[other] / rates[rate], 6)
     })
 
     // @ts-ignore
-    forexRatesMap[rate] = rateMapOtherRateObj
+    exchangeRatesMap[rate] = rateMapOtherRateObj
   })
 
-  return ((currency: RateType) => forexRatesMap[currency]) as MatchForexRates
+  return ((currency: RateType) => exchangeRatesMap[currency]) as MatchExchangeRates
 }
 
 const TodoList: FC = () => {
   const [planData, setPlanData] = useState<Task[]>(getPlanTasks())
   const [completedData, setCompletedData] = useState<Task[]>(getCompletedTasks())
-  const [getR, setR] = useState<MatchForexRates>()
+  const [getR, setR] = useState<MatchExchangeRates>()
   const [title, setTitle] = useState('')
   const [price, setPrice] = useState('')
   const [currency, setCurrency] = useState<RateType | ''>('')
@@ -77,14 +75,14 @@ const TodoList: FC = () => {
     ]
   }
   // 获取外汇汇率
-  const getForexRates = async () => {
-    const params: GetForexRatesParams = { base: 'USD', symbols: ['CNY', 'RUB'] }
-    const result = await Common.getForexRates(params)
+  const getExchangeRates = async () => {
+    const params: GetExchangeRatesParams = { base: 'USD', symbols: ['CNY', 'RUB'] }
+    const result = await Common.getExchangeRates(params)
     if (result.status === 200) {
       console.log(result)
       const { base, rates } = result.data
       setR(() => {
-        return calcforexRates(base, rates)
+        return calcExchangeRates(base, rates)
       })
     } else {
       Message.error('外汇汇率加载失败')
@@ -121,7 +119,6 @@ const TodoList: FC = () => {
   const updatePlanTaskData = (newTask: Task) => {
     const newPlanTasks = [newTask, ...planData]
     setPlanData(newPlanTasks)
-    // 更新缓存
     updatePlanTasks(newPlanTasks)
   }
   // 增加新的任务
@@ -135,18 +132,16 @@ const TodoList: FC = () => {
       return Message.warning(errorMsg)
     }
 
-    Message.success('创建成功')
     // 创建数据，并更新缓存
     updatePlanTaskData(createTask())
     // 重置数据
     resetState()
+    Message.success('创建成功')
   }
   // 完成了计划的任务
   const finishPlanTask = useCallback((task: Task) => {
     setPlanData((oldData) => {
-      const taskIdx = oldData.findIndex(n => n.id === task.id)
-      const newData = oldData.slice()
-      newData.splice(taskIdx, 1)
+      const newData = oldData.filter(n => n.id !== task.id)
       updatePlanTasks(newData)
       return newData
     })
@@ -160,11 +155,8 @@ const TodoList: FC = () => {
   // 重做已完成的任务
   const redoComputedTask = useCallback((task: Task) => {
     setCompletedData((oldData) => {
-      const taskIdx = oldData.findIndex(n => n.id === task.id)
-      const newData = oldData.slice()
-      newData.splice(taskIdx, 1)
+      const newData = oldData.filter(n => n.id !== task.id)
       updateCompletedTasks(newData)
-
       return newData
     })
 
@@ -190,14 +182,14 @@ const TodoList: FC = () => {
   })()
 
   useEffect(() => {
-    getForexRates()
+    getExchangeRates()
   }, [])
 
   return (
-    <div className="todolist bg-slate-100 flex flex-col justify-start items-center">
-      <div className="todolist-layout">
+    <div className="todo-list bg-slate-100 flex flex-col justify-start items-center">
+      <div className="todo-list-layout">
         <p className="mb-6 text-3xl font-bold text-slate-600">To Do List</p>
-        <div className="todolist-content relative bg-white shadow rounded-lg pt-5 flex flex-col overflow-hidden">
+        <div className="todo-list-content relative bg-white shadow rounded-lg pt-5 flex flex-col overflow-hidden">
           <div className="px-5">
             <div className="space-x-3 flex">
               <input
@@ -220,7 +212,7 @@ const TodoList: FC = () => {
                 // @ts-ignore
                 onChange={ev => setCurrency(ev.target.value)}>
                 <option value="">货币类型</option>
-                {!!getR && currencys.map(n => (
+                {!!getR && currencyList.map(n => (
                   <option key={n.value} value={n.value}>{ n.label }</option>
                 ))}
               </select>

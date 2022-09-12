@@ -40,8 +40,6 @@ type Props = {
 const TaskList: FC<Props> = (props) => {
   const { type, list, onChecked } = props
 
-  const config = useMemo(() => taskConfig[type], [type])
-
   const total = useMemo(() => {
     const initialValue = { RUB: '0', CNY: '0', USD: '0' }
 
@@ -70,10 +68,12 @@ const TaskList: FC<Props> = (props) => {
 
   const isCompleted = type === 'completed'
 
+  const config = taskConfig[type]
+
   return (
     <div>
       <span>{ config.title }</span>
-      <ul className="divide-y border rounded-lg my-2" onChange={proxyCheckboxChange}>
+      <ul className="divide-y border rounded-lg my-2" onInput={proxyCheckboxChange}>
         {list.length
           ? list.map(task => (
           <li className="flex py-3 text-center" key={task.id}>

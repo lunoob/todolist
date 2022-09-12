@@ -1,14 +1,14 @@
-.todolist {
+.todo-list {
     height: 100vh;
     width: 100vw;
     padding-top: 100px;
 }
 
-.todolist .todolist-layout {
+.todo-list .todo-list-layout {
     width: 100%;
     max-width: 850px;
 }
-.todolist .todolist-content {
+.todo-list .todo-list-content {
     min-height: 550px;
     max-height: 70vh;   
 }
