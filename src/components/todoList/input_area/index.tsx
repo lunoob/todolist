@@ -1,8 +1,7 @@
 import type { RateType } from '@/model/common'
 import type { Task, MatchExchangeRates } from '@/types/todoList'
 import { FC, memo, useState } from 'react'
-import { getIdStart, updateIdStart } from '@/storage/todoList'
-import { validate, validators, RuleObject, isFunction, stringFixed, uniqueId } from '@/utils'
+import { validate, validators, RuleObject, isFunction, stringFixed, blendId } from '@/utils'
 import Message from '@/public_components/message'
 import cs from 'classnames'
 
@@ -16,16 +15,6 @@ const currencyList = [
   { label: '卢布', value: 'RUB' },
   { label: '人民币', value: 'CNY' }
 ]
-
-/**
- * 创建 Message ID
- */
-function createTaskId () {
-  const prefix = 'Task_'
-  const id = uniqueId(prefix, getIdStart())
-  updateIdStart(+id.replace(prefix, ''))
-  return id
-}
 
 const InputArea: FC<InputAreaProps> = (props) => {
   const [title, setTitle] = useState('')
@@ -79,7 +68,7 @@ const InputArea: FC<InputAreaProps> = (props) => {
     }
 
     return {
-      id: createTaskId(),
+      id: blendId(),
       title,
       [currency]: +price,
       ...calcOtherPrice(
