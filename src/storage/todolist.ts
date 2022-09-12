@@ -6,7 +6,6 @@ import type { TaskData, Task } from '@/types/todoList'
 
 const PLAIN_KEY = 'todolist_plan'
 const COMPUTED_KEY = 'todolist_computed'
-const ID_START = 'todolist_id'
 
 /**
  * 获取计划中的任务
