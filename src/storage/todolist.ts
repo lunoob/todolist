@@ -2,60 +2,45 @@
 * @fileoverview Storage for todoList.
 * @author Luoob
 */
-import type { TaskData, ListType, Task } from '@/types/todoList'
+import type { TaskData, Task } from '@/types/todoList'
 
-const TODO_LIST_KEY = 'todo_list'
-const OLD_PLAN_KEY = 'todolist_plan'
-const OLD_COMPLETED_KEY = 'todolist_computed'
+const PLAIN_KEY = 'todolist_plan'
+const COMPUTED_KEY = 'todolist_computed'
 
-const defaultData: Record<ListType, unknown[]> = {
-  plan: [],
-  completed: []
+/**
+ * 获取计划中的任务
+ */
+export function getPlanTasks () {
+  const tasks = localStorage.getItem(PLAIN_KEY)
+  return tasks ? JSON.parse(tasks) : []
 }
 
 /**
- * 获取并合并旧数据
+ * 更新计划中的任务
  */
-export function getAndMergeOldData (): TaskData {
-  let planData: unknown = localStorage.getItem(OLD_PLAN_KEY)
-  planData = planData ? JSON.parse(planData as string) : []
-
-  let completedData: unknown = localStorage.getItem(OLD_COMPLETED_KEY)
-  completedData = completedData ? JSON.parse(completedData as string) : []
-
-  return {
-    plan: planData as Task[],
-    completed: completedData as Task[]
-  }
+export function updatePlanTasks (tasks: Task[]) {
+  localStorage.setItem(PLAIN_KEY, JSON.stringify(tasks))
 }
 
 /**
- * 获取 todo list 数据
+ * 获取已完成的任务
  */
-export function getTodoListData (): TaskData {
-  const oldData = getAndMergeOldData()
-  removeOldData()
+export function getCompletedTasks () {
+  const tasks = localStorage.getItem(COMPUTED_KEY)
+  return tasks ? JSON.parse(tasks) : []
+}
 
-  let data: unknown = localStorage.getItem(TODO_LIST_KEY)
-  data = data ? JSON.parse(data as string) : defaultData
-
-  return {
-    plan: [...oldData.plan, ...(data as TaskData).plan],
-    completed: [...oldData.completed, ...(data as TaskData).completed]
-  }
+/**
+ * 更新已完成的任务
+ */
+export function updateCompletedTasks (tasks: Task[]) {
+  localStorage.setItem(COMPUTED_KEY, JSON.stringify(tasks))
 }
 
 /**
  * 更新 todo list 数据
  */
 export function updateTodoListData (todoListData: TaskData) {
-  localStorage.setItem(TODO_LIST_KEY, JSON.stringify(todoListData))
-}
-
-/**
- * 清除旧的缓存数据
- */
-export function removeOldData () {
-  localStorage.removeItem(OLD_PLAN_KEY)
-  localStorage.removeItem(OLD_COMPLETED_KEY)
+  updatePlanTasks(todoListData.plan)
+  updateCompletedTasks(todoListData.completed)
 }

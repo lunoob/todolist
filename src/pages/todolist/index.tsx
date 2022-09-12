@@ -1,7 +1,7 @@
 import type { Task, TaskData } from '@/types/todoList'
 import { FC, memo, useCallback, useEffect, useState } from 'react'
 import { validate, validators, RuleObject, stringFixed } from '@/utils'
-import { getTodoListData, updateTodoListData } from '@/storage/todoList'
+import { updateTodoListData, getPlanTasks, getCompletedTasks } from '@/storage/todoList'
 import Common, { GetExchangeRatesParams, RateType } from '@/model/common'
 import TaskList from '@/components/task_list'
 import Message from '@/public_components/message'
@@ -44,7 +44,10 @@ function calcExchangeRates<T extends RateType> (base: T, rates: RestRateType<T>)
 }
 
 const TodoList: FC = () => {
-  const [taskData, setTaskData] = useState<TaskData>(getTodoListData())
+  const [taskData, setTaskData] = useState<TaskData>({
+    plan: getPlanTasks(),
+    completed: getCompletedTasks()
+  })
   const [getR, setR] = useState<MatchExchangeRates>()
   const [title, setTitle] = useState('')
   const [price, setPrice] = useState('')
@@ -79,11 +82,8 @@ const TodoList: FC = () => {
     const params: GetExchangeRatesParams = { base: 'USD', symbols: ['CNY', 'RUB'] }
     const result = await Common.getExchangeRates(params)
     if (result.status === 200) {
-      console.log(result)
       const { base, rates } = result.data
-      setR(() => {
-        return calcExchangeRates(base, rates)
-      })
+      setR(calcExchangeRates(base, rates))
     } else {
       Message.error('外汇汇率加载失败')
     }
@@ -162,16 +162,13 @@ const TodoList: FC = () => {
   // 外汇汇率信息
   const rateInfo = (() => {
     const units = ['₽/¥', '₽/$', '¥/$']
-    if (!getR) {
-      return [
-        new Array(units.length).fill(0),
-        units
-      ]
+    const defaultInfo = [new Array(units.length).fill(0), units]
+
+    if (getR) {
+      defaultInfo[0] = [getR('RUB').CNY, getR('RUB').USD, getR('CNY').USD]
     }
-    return [
-      [getR('RUB').CNY, getR('RUB').USD, getR('CNY').USD],
-      units
-    ]
+
+    return defaultInfo
   })()
 
   useEffect(() => {
