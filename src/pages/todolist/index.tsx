@@ -1,7 +1,7 @@
-import type { Task } from '@/types/todoList'
+import type { Task, TaskData } from '@/types/todoList'
 import { FC, memo, useCallback, useEffect, useState } from 'react'
 import { validate, validators, RuleObject, stringFixed } from '@/utils'
-import { getPlanTasks, updatePlanTasks, getCompletedTasks, updateCompletedTasks } from '@/storage/todoList'
+import { getTodoListData, updateTodoListData } from '@/storage/todoList'
 import Common, { GetExchangeRatesParams, RateType } from '@/model/common'
 import TaskList from '@/components/task_list'
 import Message from '@/public_components/message'
@@ -44,8 +44,7 @@ function calcExchangeRates<T extends RateType> (base: T, rates: RestRateType<T>)
 }
 
 const TodoList: FC = () => {
-  const [planData, setPlanData] = useState<Task[]>(getPlanTasks())
-  const [completedData, setCompletedData] = useState<Task[]>(getCompletedTasks())
+  const [taskData, setTaskData] = useState<TaskData>(getTodoListData())
   const [getR, setR] = useState<MatchExchangeRates>()
   const [title, setTitle] = useState('')
   const [price, setPrice] = useState('')
@@ -118,9 +117,12 @@ const TodoList: FC = () => {
   }
   // 更新计划任务数据（同时更新本地缓存）
   const updatePlanTaskData = (newTask: Task) => {
-    const newPlanTasks = [newTask, ...planData]
-    setPlanData(newPlanTasks)
-    updatePlanTasks(newPlanTasks)
+    const newTaskData: TaskData = {
+      ...taskData,
+      plan: [newTask, ...taskData.plan]
+    }
+    setTaskData(newTaskData)
+    updateTodoListData(newTaskData)
   }
   // 增加新的任务
   const addNewTask = async () => {
@@ -141,30 +143,20 @@ const TodoList: FC = () => {
   }
   // 完成了计划的任务
   const finishPlanTask = useCallback((task: Task) => {
-    setPlanData((oldData) => {
-      const newData = oldData.filter(n => n.id !== task.id)
-      updatePlanTasks(newData)
-      return newData
-    })
+    setTaskData(({ plan, completed }) => {
+      const newPlanTasks = plan.filter(n => n.id !== task.id)
+      const newCompleted = [task, ...completed]
 
-    setCompletedData((oldData) => {
-      const newData = [task, ...oldData]
-      updateCompletedTasks(newData)
-      return newData
+      return { plan: newPlanTasks, completed: newCompleted }
     })
   }, [])
   // 重做已完成的任务
   const redoComputedTask = useCallback((task: Task) => {
-    setCompletedData((oldData) => {
-      const newData = oldData.filter(n => n.id !== task.id)
-      updateCompletedTasks(newData)
-      return newData
-    })
+    setTaskData(({ plan, completed }) => {
+      const newPlanTasks = [...plan, task]
+      const newCompleted = completed.filter(n => n.id !== task.id)
 
-    setPlanData((oldData) => {
-      const newData = [...oldData, task]
-      updatePlanTasks(newData)
-      return newData
+      return { plan: newPlanTasks, completed: newCompleted }
     })
   }, [])
   // 外汇汇率信息
@@ -236,8 +228,8 @@ const TodoList: FC = () => {
             </div>
           </div>
           <div className="space-y-10 px-5 overflow-auto mt-2 pb-5">
-            <TaskList type="plan" list={planData} onChecked={finishPlanTask} />
-            <TaskList type="completed" list={completedData} onChecked={redoComputedTask} />
+            <TaskList type="plan" list={taskData.plan} onChecked={finishPlanTask} />
+            <TaskList type="completed" list={taskData.completed} onChecked={redoComputedTask} />
           </div>
         </div>
       </div>

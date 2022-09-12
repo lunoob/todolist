@@ -1,9 +1,14 @@
-import type { Task } from '@/types/todoList'
+import type { Task, ListType } from '@/types/todoList'
+import type { RateType } from '@/model/common'
 import { FC, useMemo, memo } from 'react'
 import { stringFixed } from '@/utils'
-import { RateType } from '@/model/common'
 
-const taskConfig = {
+type TaskConfig = {
+  title: string
+  costLabel: string
+}
+
+const taskConfig: Record<ListType, TaskConfig> = {
   plan: {
     title: '计划:',
     costLabel: '将要花费:'
@@ -14,9 +19,15 @@ const taskConfig = {
   }
 }
 
-const titleTip = {
+const titleTip: Record<ListType, string> = {
   plan: '点击完成',
   completed: '点击重做'
+}
+
+type Props = {
+  type: ListType
+  list: Task[]
+  onChecked?: (task: Task) => any
 }
 
 /**
@@ -30,12 +41,6 @@ function m (value: number | string, type: RateType) {
   }
 
   return (symbols[type] || '') + value
-}
-
-type Props = {
-    type: keyof typeof taskConfig
-    list: Task[]
-    onChecked?: (task: Task) => any
 }
 
 const TaskList: FC<Props> = (props) => {
