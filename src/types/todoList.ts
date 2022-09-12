@@ -8,3 +8,9 @@ export type Task = Record<RateType, string> & {
 }
 
 export type TaskData = Record<ListType, Task[]>
+
+export type RestRateType<K extends RateType, V = number> = Omit<Record<RateType, V>, K>
+
+export type MatchExchangeRates = {
+  <T extends RateType>(currency: T): RestRateType<T>
+}

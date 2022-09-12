@@ -17,7 +17,9 @@ export function validate(rules: RuleObject[], callback: (errorMsg: string) => an
  */
 export function validate (rules: RuleObject[], callback?: Function) {
   if (callback != null && isFunction(callback)) {
-    return callback(validateRules(rules))
+    return setTimeout(() => {
+      callback(validateRules(rules))
+    })
   }
 
   return Promise.resolve(validateRules(rules))

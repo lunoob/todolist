@@ -1,23 +1,12 @@
-import type { Task, TaskData } from '@/types/todoList'
+import type { Task, TaskData, RestRateType, MatchExchangeRates } from '@/types/todoList'
 import { FC, memo, useCallback, useEffect, useState } from 'react'
-import { validate, validators, RuleObject, stringFixed } from '@/utils'
+import { stringFixed } from '@/utils'
 import { updateTodoListData, getPlanTasks, getCompletedTasks } from '@/storage/todoList'
 import Common, { GetExchangeRatesParams, RateType } from '@/model/common'
-import TaskList from '@/components/task_list'
+import TaskList from '@/components/todoList/task_list'
+import InputArea from '@/components/todoList/input_area'
 import Message from '@/public_components/message'
-import cs from 'classnames'
 import './index.css'
-
-type RestRateType<K extends RateType, V = number> = Omit<Record<RateType, V>, K>
-type MatchExchangeRates = {
-  <T extends RateType>(currency: T): RestRateType<T>
-}
-
-const currencyList = [
-  { label: '美元', value: 'USD' },
-  { label: '卢布', value: 'RUB' },
-  { label: '人民币', value: 'CNY' }
-]
 
 // 计算外汇汇率
 function calcExchangeRates<T extends RateType> (base: T, rates: RestRateType<T>) {
@@ -49,105 +38,38 @@ const TodoList: FC = () => {
     completed: getCompletedTasks()
   })
   const [getR, setR] = useState<MatchExchangeRates>()
-  const [title, setTitle] = useState('')
-  const [price, setPrice] = useState('')
-  const [currency, setCurrency] = useState<RateType | ''>('')
 
-  // 获取校验规则
-  const getRules = (): RuleObject[] => {
-    return [
-      {
-        value: title,
-        rules: [
-          { validator: validators.isEmpty, message: '任务不能为空' }
-        ]
-      },
-      {
-        value: price,
-        rules: [
-          { validator: validators.isEmpty, message: '价格不能为空' },
-          { validator: validators.isNumber, message: '请输入正确的价格' }
-        ]
-      },
-      {
-        value: currency,
-        rules: [
-          { validator: validators.isEmpty, message: '请选择货币类型' }
-        ]
-      }
-    ]
-  }
   // 获取外汇汇率
   const getExchangeRates = async () => {
     const params: GetExchangeRatesParams = { base: 'USD', symbols: ['CNY', 'RUB'] }
     const result = await Common.getExchangeRates(params)
     if (result.status === 200) {
       const { base, rates } = result.data
-      setR(calcExchangeRates(base, rates))
+      setR(() => calcExchangeRates(base, rates))
     } else {
       Message.error('外汇汇率加载失败')
     }
   }
-  // 创建新的计划中的任务
-  const createTask = () => {
-    const calcOtherPrice = (otherCurrency: Record<string, number>) => {
-      Object.keys(otherCurrency).forEach(key => {
-        const originValue = otherCurrency[key]
-        // @ts-ignore
-        otherCurrency[key] = stringFixed(originValue * price, 6)
-      })
+  // 创建新的任务
+  const createNewTask = useCallback((newTask: Task) => {
+    setTaskData((oldData) => {
+      const newData: TaskData = {
+        ...oldData,
+        plan: [newTask, ...oldData.plan]
+      }
 
-      return otherCurrency
-    }
-
-    return {
-      id: Date.now(),
-      title,
-      [currency]: +price,
-      ...calcOtherPrice(
-        getR!(currency as RateType)
-      )
-    } as Task
-  }
-  // 重置交互的状态
-  const resetState = () => {
-    setTitle('')
-    setPrice('')
-    setCurrency('')
-  }
-  // 更新计划任务数据（同时更新本地缓存）
-  const updatePlanTaskData = (newTask: Task) => {
-    const newTaskData: TaskData = {
-      ...taskData,
-      plan: [newTask, ...taskData.plan]
-    }
-    setTaskData(newTaskData)
-    updateTodoListData(newTaskData)
-  }
-  // 增加新的任务
-  const addNewTask = async () => {
-    if (!getR) {
-      return
-    }
-
-    const errorMsg = await validate(getRules())
-    if (errorMsg) {
-      return Message.warning(errorMsg)
-    }
-
-    // 创建数据，并更新缓存
-    updatePlanTaskData(createTask())
-    // 重置数据
-    resetState()
-    Message.success('创建成功')
-  }
+      updateTodoListData(newData)
+      return newData
+    })
+  }, [])
   // 完成了计划的任务
   const finishPlanTask = useCallback((task: Task) => {
     setTaskData(({ plan, completed }) => {
       const newPlanTasks = plan.filter(n => n.id !== task.id)
       const newCompleted = [task, ...completed]
-
-      return { plan: newPlanTasks, completed: newCompleted }
+      const newTaskData = { plan: newPlanTasks, completed: newCompleted }
+      updateTodoListData(newTaskData)
+      return newTaskData
     })
   }, [])
   // 重做已完成的任务
@@ -155,8 +77,9 @@ const TodoList: FC = () => {
     setTaskData(({ plan, completed }) => {
       const newPlanTasks = [...plan, task]
       const newCompleted = completed.filter(n => n.id !== task.id)
-
-      return { plan: newPlanTasks, completed: newCompleted }
+      const newTaskData = { plan: newPlanTasks, completed: newCompleted }
+      updateTodoListData(newTaskData)
+      return newTaskData
     })
   }, [])
   // 外汇汇率信息
@@ -181,40 +104,7 @@ const TodoList: FC = () => {
         <p className="mb-6 text-3xl font-bold text-slate-600">To Do List</p>
         <div className="todo-list-content relative bg-white shadow rounded-lg pt-5 flex flex-col overflow-hidden">
           <div className="px-5">
-            <div className="space-x-3 flex">
-              <input
-                type="text"
-                placeholder="任务"
-                className="input input-bordered flex-1"
-                value={title}
-                onChange={ev => setTitle(ev.target.value)}
-              />
-              <input
-                type="text"
-                placeholder="价格"
-                className="input input-bordered"
-                value={price}
-                onChange={ev => setPrice(ev.target.value)}
-              />
-              <select
-                value={currency}
-                className="select select-bordered max-w-xs"
-                // @ts-ignore
-                onChange={ev => setCurrency(ev.target.value)}>
-                <option value="">货币类型</option>
-                {!!getR && currencyList.map(n => (
-                  <option key={n.value} value={n.value}>{ n.label }</option>
-                ))}
-              </select>
-              <button
-                className={cs('btn px-8', {
-                  'btn-primary': getR,
-                  'btn-disabled': !getR
-                })}
-                onClick={addNewTask}>
-                添加
-              </button>
-            </div>
+            <InputArea getRate={getR} onCreate={createNewTask} />
             <div className="text-right space-x-4 mt-3 font-light">
               {rateInfo[0].map((n, idx) => {
                 const unit = rateInfo[1][idx]
