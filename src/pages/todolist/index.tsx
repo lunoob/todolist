@@ -1,3 +1,4 @@
+import type { Task } from '@/types/todoList'
 import { FC, memo, useCallback, useEffect, useState } from 'react'
 import { validate, validators, RuleObject, stringFixed } from '@/utils'
 import { getPlanTasks, updatePlanTasks, getCompletedTasks, updateCompletedTasks } from '@/storage/todoList'

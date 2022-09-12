@@ -1,3 +1,4 @@
+import type { Task } from '@/types/todoList'
 import { FC, useMemo, memo } from 'react'
 import { stringFixed } from '@/utils'
 import { RateType } from '@/model/common'
@@ -28,7 +29,7 @@ function m (value: number | string, type: RateType) {
     USD: '$'
   }
 
-  return symbols[type] + value
+  return (symbols[type] || '') + value
 }
 
 type Props = {

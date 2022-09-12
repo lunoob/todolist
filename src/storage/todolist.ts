@@ -2,6 +2,7 @@
 * @fileoverview Storage for todoList.
 * @author Luoob
 */
+import type { Task } from '@/types/todoList'
 
 const PLAIN_KEY = 'todo_list_plan'
 const COMPUTED_KEY = 'todo_list_computed'
