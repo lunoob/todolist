@@ -1,10 +1,10 @@
 import type { Task, TaskData, RestRateType, MatchExchangeRates } from '@/types/todoList'
 import { FC, memo, useCallback, useEffect, useState } from 'react'
 import { stringFixed } from '@/utils'
-import { updateTodoListData, getPlanTasks, getCompletedTasks } from '@/storage/todoList'
+import { updateTodoListData, getPlanTasks, getCompletedTasks } from '@/storage/todolist'
 import Common, { GetExchangeRatesParams, RateType } from '@/model/common'
-import TaskList from '@/components/todoList/task_list'
-import InputArea from '@/components/todoList/input_area'
+import TaskList from '@/components/todolist/task_list'
+import InputArea from '@/components/todolist/input_area'
 import Message from '@/public_components/message'
 import './index.css'
 
