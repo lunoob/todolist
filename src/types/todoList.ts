@@ -3,7 +3,7 @@ import { RateType } from '@/model/common'
 export type ListType = 'plan' | 'completed'
 
 export type Task = Record<RateType, string> & {
-  id: number
+  id: number | string
   title: string
 }
 

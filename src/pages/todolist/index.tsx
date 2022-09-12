@@ -8,7 +8,9 @@ import InputArea from '@/components/todoList/input_area'
 import Message from '@/public_components/message'
 import './index.css'
 
-// 计算外汇汇率
+/**
+ * 计算外汇汇率
+ */
 function calcExchangeRates<T extends RateType> (base: T, rates: RestRateType<T>) {
   const exchangeRatesMap = {
     [base]: rates

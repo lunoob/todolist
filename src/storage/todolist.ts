@@ -6,6 +6,7 @@ import type { TaskData, Task } from '@/types/todoList'
 
 const PLAIN_KEY = 'todolist_plan'
 const COMPUTED_KEY = 'todolist_computed'
+const ID_START = 'todolist_id'
 
 /**
  * 获取计划中的任务
@@ -43,4 +44,19 @@ export function updateCompletedTasks (tasks: Task[]) {
 export function updateTodoListData (todoListData: TaskData) {
   updatePlanTasks(todoListData.plan)
   updateCompletedTasks(todoListData.completed)
+}
+
+/**
+ * 获取 id 起始位置
+ */
+export function getIdStart () {
+  const startIdx = localStorage.getItem(ID_START)
+  return startIdx ? +startIdx : 1111
+}
+
+/**
+ * 设置 id 起始位置
+ */
+export function updateIdStart (id: number) {
+  localStorage.setItem(ID_START, id + '')
 }

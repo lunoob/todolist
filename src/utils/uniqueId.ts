@@ -7,9 +7,9 @@ const idCounter: Record<string, number> = {}
  *
  * uniqueId() => 1、2
  */
-export function uniqueId (prefix = '$react$') {
+export function uniqueId (prefix = '$react$', start: number = 0) {
   if (!idCounter[prefix]) {
-    idCounter[prefix] = 0
+    idCounter[prefix] = start
   }
 
   const id = ++idCounter[prefix]
